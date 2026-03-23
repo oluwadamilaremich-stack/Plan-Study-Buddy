@@ -1,130 +1,110 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const StudyContext = createContext();
 
 const INITIAL_STATE = {
-  profile: { 
-    name: "Scholar", 
-    email: "", 
-    avatar: null, 
-    bio: "", 
-    school: "" 
-  },
+  profile: { name: "", goal: "" },
   subjects: [],
   activeSubjectIndex: 0,
-  stats: { 
-    streak: 0, 
-    todayHours: 0, 
-    completed: 0, 
-    totalProgress: 0 
-  },
-  currentSession: null
+  stats: { streak: 0, todayHours: 0, totalProgress: 0 },
+  currentSession: null,
+  lastUpdated: null
 };
 
 export const StudyProvider = ({ children }) => {
-  // 1. Initialize from LocalStorage with Error Handling
+  const { currentUser } = useAuth();
+  
+  // Create a unique key for this specific user
+  const storageKey = currentUser ? `study_app_data_${currentUser.uid}` : 'study_app_data_guest';
+
   const [userData, setUserData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('study_app_data');
-      return saved ? JSON.parse(saved) : INITIAL_STATE;
-    } catch (error) {
-      console.error("Error loading local storage:", error);
-      return INITIAL_STATE;
+    // 1. Initial Load Logic
+    const saved = localStorage.getItem(storageKey);
+    if (saved) return JSON.parse(saved);
+
+    // 2. MIGRATION: If no user-specific data exists, check if there's "Legacy" data
+    // from before we added the User ID keys.
+    const legacyData = localStorage.getItem('study_app_data');
+    if (legacyData && currentUser) {
+      console.log("Migrating legacy data to account:", currentUser.uid);
+      localStorage.setItem(storageKey, legacyData);
+      // Optional: localStorage.removeItem('study_app_data'); 
+      return JSON.parse(legacyData);
     }
+
+    return INITIAL_STATE;
   });
 
-  // 2. Auto-Sync to LocalStorage
+  // --- SYNC STATE WHEN USER LOGS IN/OUT ---
   useEffect(() => {
-    localStorage.setItem('study_app_data', JSON.stringify(userData));
-  }, [userData]);
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      setUserData(JSON.parse(saved));
+    } else {
+      // If it's a truly brand new user with no data at all
+      setUserData(INITIAL_STATE);
+    }
+  }, [currentUser, storageKey]);
 
-  // 3. INTERNAL HELPER: Auto-calculate Average Progress
-  const calculateTotalProgress = (subjects) => {
-    if (!subjects || subjects.length === 0) return 0;
-    const sum = subjects.reduce((acc, sub) => acc + (sub.progress || 0), 0);
-    return Math.round(sum / subjects.length);
-  };
+  // --- PERSISTENCE ---
+  useEffect(() => {
+    if (userData !== INITIAL_STATE) {
+      localStorage.setItem(storageKey, JSON.stringify(userData));
+    }
+  }, [userData, storageKey]);
 
-  /**
-   * Main Update Function
-   */
-  const updateStudyPlan = (newData) => {
-    setUserData((prev) => {
-      const updatedSubjects = newData.subjects || prev.subjects;
-      
-      const newTotalProgress = newData.subjects 
-        ? calculateTotalProgress(updatedSubjects) 
-        : prev.stats.totalProgress;
+  // --- ACTIONS ---
 
-      return {
-        ...prev,
-        // Merge Profile
-        profile: newData.profile 
-          ? { ...prev.profile, ...newData.profile } 
-          : prev.profile,
-        
-        // Deep Merge Stats
-        stats: { 
-          ...prev.stats, 
-          ...newData.stats, 
-          totalProgress: newTotalProgress 
-        },
-
-        subjects: updatedSubjects,
-
-        currentSession: newData.hasOwnProperty('currentSession') 
-          ? newData.currentSession 
-          : prev.currentSession,
-
-        activeSubjectIndex: newData.hasOwnProperty('activeSubjectIndex')
-          ? newData.activeSubjectIndex
-          : prev.activeSubjectIndex
-      };
-    });
-  };
-
-  /**
-   * NEW HELPER: addStudyStats
-   * Simplifies updating specific stats from any component.
-   * Usage: addStudyStats('task', 1) or addStudyStats('hours', 0.5)
-   */
-  const addStudyStats = (type, value = 1) => {
-    setUserData(prev => {
-      const currentStats = prev.stats || INITIAL_STATE.stats;
-      
-      return {
-        ...prev,
-        stats: {
-          ...currentStats,
-          todayHours: type === 'hours' ? (currentStats.todayHours || 0) + value : currentStats.todayHours,
-          completed: type === 'task' ? (currentStats.completed || 0) + value : currentStats.completed,
-          // Basic streak logic: if they do anything, ensure streak is at least 1
-          streak: currentStats.streak === 0 ? 1 : currentStats.streak 
-        }
-      };
-    });
-  };
-
-  const updateProfileName = (newName) => {
+  const updateStudyPlan = (updates) => {
     setUserData(prev => ({
       ...prev,
-      profile: { ...prev.profile, name: newName }
+      ...updates,
+      lastUpdated: new Date().toISOString()
     }));
   };
 
+  const addSubject = (newSubject) => {
+    setUserData(prev => ({
+      ...prev,
+      subjects: [...prev.subjects, { ...newSubject, progress: 0, topics: newSubject.topics || [] }]
+    }));
+  };
+
+  const updateSubjectProgress = (subjectName, newProgress) => {
+    setUserData(prev => {
+      const updatedSubjects = prev.subjects.map(s => 
+        s.name === subjectName ? { ...s, progress: Math.min(100, newProgress) } : s
+      );
+      
+      // Calculate total average progress for the dashboard
+      const totalAvg = updatedSubjects.length > 0 
+        ? updatedSubjects.reduce((acc, curr) => acc + (curr.progress || 0), 0) / updatedSubjects.length 
+        : 0;
+
+      return {
+        ...prev,
+        subjects: updatedSubjects,
+        stats: { ...prev.stats, totalProgress: totalAvg }
+      };
+    });
+  };
+
   const clearData = () => {
-    localStorage.removeItem('study_app_data');
+    localStorage.removeItem(storageKey);
     setUserData(INITIAL_STATE);
   };
 
+  const value = {
+    userData,
+    updateStudyPlan,
+    addSubject,
+    updateSubjectProgress,
+    clearData
+  };
+
   return (
-    <StudyContext.Provider value={{ 
-      userData, 
-      updateStudyPlan, 
-      addStudyStats, // Added to Provider
-      updateProfileName, 
-      clearData 
-    }}>
+    <StudyContext.Provider value={value}>
       {children}
     </StudyContext.Provider>
   );
@@ -132,8 +112,6 @@ export const StudyProvider = ({ children }) => {
 
 export const useStudy = () => {
   const context = useContext(StudyContext);
-  if (!context) {
-    throw new Error("useStudy must be used within a StudyProvider");
-  }
+  if (!context) throw new Error("useStudy must be used within a StudyProvider");
   return context;
 };

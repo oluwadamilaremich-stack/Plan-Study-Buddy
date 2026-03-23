@@ -9,7 +9,6 @@ const OnboardingOne = ({ next, skip }) => {
   return (
     <div className="w-full min-h-screen flex items-center justify-center px-6 lg:px-20 py-24 relative">
       
-      {/* Functional Skip Button */}
       <p 
         onClick={skip}
         className="absolute top-8 right-6 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 text-gray-400 text-sm cursor-pointer hover:text-[#246690] transition-colors font-medium"
@@ -18,9 +17,9 @@ const OnboardingOne = ({ next, skip }) => {
       </p>
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full max-w-6xl gap-16">
-        {/* LEFT CONTENT */}
+        
         <div className="max-w-md">
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex align-center gap-2 mb-6">
             <img src={PlanImg} className="w-12 h-12" alt="Plan" />
             <span className="font-bold text-2xl text-[#101828]">Plan</span>
           </div>
@@ -49,7 +48,6 @@ const OnboardingOne = ({ next, skip }) => {
             </div>
           </div>
 
-          {/* Progress Indicators */}
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-2 bg-gradient-to-r from-[#246690] to-[#00BBA7] rounded-full"></div>
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
@@ -58,17 +56,16 @@ const OnboardingOne = ({ next, skip }) => {
 
           <button
             onClick={next}
-            className="w-60 py-3 rounded-lg text-white font-bold bg-gradient-to-r from-[#246690] to-[#00BBA7] hover:opacity-90 transition-opacity shadow-lg shadow-teal-100"
+            className="w-60 py-3 rounded-lg text-white font-bold bg-gradient-to-r from-[#246690] to-[#00BBA7] hover:opacity-90 transition-opacity"
           >
             Next
           </button>
         </div>
 
-        {/* RIGHT IMAGE */}
         <div className="w-full flex lg:justify-end">
           <img
             src={Onboard1}
-            className="w-full max-w-[420px] lg:max-w-[500px] rounded-2xl shadow-2xl"
+            className="w-full max-w-[420px] lg:max-w-[500px] rounded-2xl hidden md:block"
             alt="Onboarding Illustration"
           />
         </div>

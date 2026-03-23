@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { FiEye, FiEyeOff } from "react-icons/fi"; // Imported eye icons
 
 const Signup = () => {
   return (
@@ -14,6 +15,7 @@ const SignupForm = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // State for toggle
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -30,9 +32,7 @@ const SignupForm = () => {
     try {
       setError('');
       setLoading(true);
-
       await signup(email, password, name); 
-      
       navigate('/accountsetup');
     } catch (err) {
       setError('Failed to create an account: ' + err.message);
@@ -57,7 +57,7 @@ const SignupForm = () => {
         )}
 
         <form className="space-y-5" onSubmit={handleSubmit}>
- 
+          {/* Full Name */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Full Name
@@ -67,11 +67,12 @@ const SignupForm = () => {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="e.g. Nimah Heis"
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#3B82CD] focus:border-transparent outline-none transition-all placeholder:text-gray-400"
             />
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Email Address
@@ -86,18 +87,26 @@ const SignupForm = () => {
             />
           </div>
 
+          {/* Password with Toggle */}
           <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-sm font-semibold text-gray-700">Password</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#3B82CD] focus:border-transparent outline-none transition-all placeholder:text-gray-400 pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#3B82CD] transition-colors focus:outline-none"
+              >
+                {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+              </button>
             </div>
-            <input 
-              type="password" 
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#3B82CD] focus:border-transparent outline-none transition-all placeholder:text-gray-400"
-            />
           </div>
 
           <button 

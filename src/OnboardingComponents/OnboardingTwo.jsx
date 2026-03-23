@@ -18,7 +18,7 @@ const OnboardingTwo = ({ next, prev, skip }) => {
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full max-w-6xl gap-16">
         <div className="max-w-md">
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex align-center gap-2 mb-6">
             <img src={PlanImg} className="w-12 h-12" alt="Plan" />
             <span className="font-bold text-2xl text-[#101828]">Plan</span>
           </div>
@@ -46,7 +46,6 @@ const OnboardingTwo = ({ next, prev, skip }) => {
             </div>
           </div>
 
-          {/* Progress Indicators */}
           <div className="flex items-center gap-2 mb-6">
             <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
             <div className="w-8 h-2 bg-gradient-to-r from-[#246690] to-[#00BBA7] rounded-full"></div>
@@ -62,7 +61,7 @@ const OnboardingTwo = ({ next, prev, skip }) => {
             </button>
             <button
               onClick={next}
-              className="w-[164px] py-3 rounded-lg text-white font-bold bg-gradient-to-r from-[#246690] to-[#00BBA7] hover:opacity-90 transition-opacity shadow-lg shadow-teal-100"
+              className="w-[164px] py-3 rounded-lg text-white font-bold bg-gradient-to-r from-[#246690] to-[#00BBA7] hover:opacity-90 transition-opacity"
             >
               Next
             </button>
@@ -72,7 +71,7 @@ const OnboardingTwo = ({ next, prev, skip }) => {
         <div className="w-full flex lg:justify-end">
           <img
             src={Onboard2}
-            className="w-full max-w-[420px] lg:max-w-[500px] rounded-2xl shadow-2xl"
+            className="w-full max-w-[420px] lg:max-w-[500px] rounded-2xl hidden md:block"
             alt="Illustration"
           />
         </div>

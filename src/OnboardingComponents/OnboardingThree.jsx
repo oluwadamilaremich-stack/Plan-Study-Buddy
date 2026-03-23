@@ -79,7 +79,7 @@ const OnboardingThree = ({ prev }) => {
         <div className="w-full flex lg:justify-end">
           <img
             src={Onboard3}
-            className="w-full max-w-[420px] lg:max-w-[500px] rounded-2xl shadow-xl"
+            className="w-full max-w-[420px] lg:max-w-[500px] rounded-2xl hidden md:block"
           />
         </div>
 

@@ -4,19 +4,21 @@ import { FaRegEye, FaHeadphonesAlt, FaChevronLeft, FaCheck } from "react-icons/f
 import { LuMousePointer2 } from "react-icons/lu";
 import { FiBookOpen } from "react-icons/fi";
 
-
 const LearningStyles = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const [prevData] = useState(location.state?.finalPlan || []);
+  // LOGIC FIX: Ensure we extract the subjects correctly from the previous route state
+  const [prevData] = useState(location.state?.subjects || []);
   const [selectedStyles, setSelectedStyles] = useState([]);
 
+  // LOGIC FIX: Correct the guard condition to prevent infinite redirect loops
   useEffect(() => {
-    if (!location.state?.finalPlan) {
+    if (!location.state?.subjects) {
       navigate('/topicsetup'); 
     }
-  }, [location, navigate]);
+    window.scrollTo(0, 0);
+  }, [location.state, navigate]);
 
   const styles = [
     {
@@ -56,6 +58,8 @@ const LearningStyles = () => {
   };
 
   const handleContinue = () => {
+    if (selectedStyles.length === 0) return;
+
     const finalOnboardingData = {
       subjects: prevData,
       learningStyles: selectedStyles
@@ -67,9 +71,12 @@ const LearningStyles = () => {
     <div className="w-full animate-in fade-in duration-700">
       
         <div className="flex justify-between items-center mb-6 pt-4">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-gray-400 hover:text-gray-800 transition-colors">
-                <FaChevronLeft size={18}/> <span className="text-sm font-medium">Back</span>
-            </button>
+            <button 
+  onClick={() => navigate('/topicsetup', { state: { subjects: prevData } })} 
+  className="..."
+>
+  <FaChevronLeft size={18}/> <span>Back</span>
+</button>
             <div className="flex flex-col items-end">
                 <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Step 3 of 5</span>
         

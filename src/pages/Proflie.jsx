@@ -16,21 +16,15 @@ const Profile = () => {
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // DYNAMIC PROFILE DATA
+  // Derived profile data - Reactive to both Auth and Study Context
   const profile = {
     name: userData?.profile?.name || currentUser?.displayName || "Scholar",
     email: userData?.profile?.email || currentUser?.email || "student@email.com",
     avatar: userData?.profile?.avatar || currentUser?.photoURL || null,
     
-    // Dynamic Stats Logic
     stats: {
-      // Pulling from userData.stats or defaulting to 0
       streak: userData?.stats?.streak || 0,
-      
-      // We use Number() and fallback to 0 to ensure .toFixed(1) doesn't crash if data is missing
       hours: Number(userData?.stats?.todayHours || 0).toFixed(1),
-      
-      // Total completed tasks/subjects
       completed: userData?.stats?.completed || 0
     }
   };
@@ -66,7 +60,7 @@ const Profile = () => {
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-[#F9FAFB] relative">
       
-      {/* Banner Section */}
+      {/* Header Section */}
       <div className="h-[300px] bg-gradient-to-r from-[#246690] to-[#14B8A6] relative flex flex-col items-center pt-10">
         <div className="flex flex-col items-center z-10">
           <div className="w-24 h-24 bg-[#6395B6] rounded-[2rem] border-4 border-white/20 flex items-center justify-center text-white text-3xl font-bold shadow-xl overflow-hidden backdrop-blur-sm mb-4">
@@ -83,7 +77,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Dynamic Stats Card */}
+        {/* Stats Card Overlay */}
         <div className="absolute -bottom-16 left-0 right-0 px-6 md:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="bg-white rounded-[2rem] p-6 grid grid-cols-3 gap-2 md:gap-4 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100">
@@ -113,7 +107,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Menu Sections */}
+      {/* Settings Sections */}
       <div className="mt-24 px-6 md:px-8 pb-16 max-w-5xl mx-auto w-full space-y-10">
         {sections.map((sec) => (
           <div key={sec.title} className="space-y-4">
@@ -136,7 +130,7 @@ const Profile = () => {
           </div>
         ))}
 
-        {/* Logout Button */}
+        {/* Individual Logout Button */}
         <button 
           onClick={() => setShowLogoutModal(true)}
           className="w-full bg-white rounded-[1.5rem] border border-gray-100 p-5 flex items-center justify-between hover:bg-red-50 group transition-all"
@@ -151,9 +145,9 @@ const Profile = () => {
         </button>
       </div>
 
-      {/* Logout Modal */}
+      {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#101828]/60 backdrop-blur-md">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-[#101828]/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl text-center">
             <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <FiLogOut size={40} />

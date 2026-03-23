@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStudy } from '../context/StudyContext';
 import { useAuth } from '../context/AuthContext';
@@ -9,7 +9,8 @@ import { LuLoaderCircle } from "react-icons/lu";
 
 const EditProfile = () => {
   const { userData, updateStudyPlan } = useStudy();
-  const { currentUser } = useAuth(); 
+  // 1. Destructure refreshUser from useAuth
+  const { currentUser, refreshUser } = useAuth(); 
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -22,13 +23,12 @@ const EditProfile = () => {
     "https://api.dicebear.com/7.x/avataaars/svg?seed=Bear",
   ];
 
-  // Initialize state from Context first, then Firebase, then defaults
   const [formData, setFormData] = useState({
-    firstName: userData?.profile?.firstName || currentUser?.displayName?.split(' ')[0] || "Alex",
-    lastName: userData?.profile?.lastName || currentUser?.displayName?.split(' ')[1] || "Johnson",
+    firstName: userData?.profile?.firstName || currentUser?.displayName?.split(' ')[0] || "Scholar",
+    lastName: userData?.profile?.lastName || currentUser?.displayName?.split(' ')[1] || "",
     email: userData?.profile?.email || currentUser?.email || "",
     avatar: userData?.profile?.avatar || currentUser?.photoURL || null,
-    school: userData?.profile?.school || "Lincoln High School",
+    school: userData?.profile?.school || "Not Specified",
     bio: userData?.profile?.bio || ""
   });
 
@@ -45,38 +45,52 @@ const EditProfile = () => {
 
   const handleSave = async () => {
     setLoading(true);
-    const fullNewName = `${formData.firstName} ${formData.lastName}`;
+    const fullNewName = `${formData.firstName} ${formData.lastName}`.trim();
 
     try {
-      if (currentUser) {
+      // 2. Update Firebase Auth Profile
+      if (currentUser && typeof currentUser.getIdToken === 'function') {
         const profileUpdates = { displayName: fullNewName };
 
-        // Only sync to Firebase if it's a URL. 
-        // We skip Base64 strings to avoid the "Failed to save" error.
+        // Firebase only accepts URLs for photoURL (Base64/DataURIs are too large)
         if (formData.avatar && typeof formData.avatar === 'string' && formData.avatar.startsWith('http')) {
           profileUpdates.photoURL = formData.avatar;
         }
 
         await updateProfile(currentUser, profileUpdates);
+
+        // 3. Trigger refreshUser to update the Sidebar and Header instantly
+        if (refreshUser) {
+          await refreshUser();
+        }
       }
 
-      // Sync EVERYTHING to your local Context.
-      // This ensures your custom uploaded image shows up in the Sidebar and Profile screen.
+      // 4. Sync to local StudyContext
       updateStudyPlan({
         ...userData,
         profile: {
-          ...formData,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           name: fullNewName,
-          avatar: formData.avatar 
+          email: formData.email,
+          avatar: formData.avatar,
+          school: formData.school,
+          bio: formData.bio
         }
       });
 
-      // Give the state a tiny moment to settle before navigating
-      setTimeout(() => navigate('/dashboard/profile'), 100);
+      // Navigate back to the profile view
+      navigate('/dashboard/profile');
       
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert(`Failed to save changes: ${error.message}`);
+      
+      // Safety net for the getIdToken error
+      if (error.message.includes('getIdToken')) {
+        navigate('/dashboard/profile');
+      } else {
+        alert(`Failed to save changes: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }

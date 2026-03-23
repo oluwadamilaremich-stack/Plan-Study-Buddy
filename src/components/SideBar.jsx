@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import PlanImg from "../assets/PlanImg.png";
+import PlanImg from "../assets/PlanImg.png"; // Ensure this path is correct
 import { FaHome, FaBook, FaRegUser } from "react-icons/fa";
 import { FiMessageSquare, FiLogOut } from "react-icons/fi";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -14,13 +14,15 @@ const SideBar = ({ isOpen, setIsOpen }) => {
   
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // PRIORITY FIX: Look at Context data first
+  // ✅ LOGIC: Prioritize the real-time userData from Context
+  // This ensures the name updates the moment the profile setup is finished.
   const profileName = userData?.profile?.name || currentUser?.displayName || "Scholar";
   const avatar = userData?.profile?.avatar || currentUser?.photoURL || null;
 
   const handleLogout = async () => {
     try {
       await logout();
+      setIsOpen(false);
       navigate('/login');
     } catch (error) {
       console.error("Failed to log out", error);
@@ -29,6 +31,7 @@ const SideBar = ({ isOpen, setIsOpen }) => {
 
   return (
     <>
+      {/* Mobile Overlay */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-[#101828]/50 backdrop-blur-sm z-[110] lg:hidden"
@@ -36,6 +39,7 @@ const SideBar = ({ isOpen, setIsOpen }) => {
         />
       )}
 
+      {/* Sidebar Container */}
       <aside className={`
         fixed inset-y-0 left-0 z-[120] w-[280px] bg-white border-r border-gray-200 flex flex-col justify-between transition-transform duration-300 ease-in-out
         lg:relative lg:translate-x-0 lg:w-[260px]
@@ -43,6 +47,7 @@ const SideBar = ({ isOpen, setIsOpen }) => {
       `}>
         
         <div>
+          {/* Logo Section */}
           <div className="py-6 px-6 flex items-center justify-between border-b border-gray-50">
             <div className="flex items-center gap-3">
               <img src={PlanImg} alt="Logo" className="w-9 h-9 object-contain"/>
@@ -56,6 +61,7 @@ const SideBar = ({ isOpen, setIsOpen }) => {
             </button>
           </div>
 
+          {/* Navigation Links */}
           <nav className="p-4 space-y-2 mt-4">
             <NavItem to="/dashboard" icon={<FaHome size={20} />} label="Dashboard" onClick={() => setIsOpen(false)} end />
             <NavItem to="/dashboard/studyplan" icon={<FaBook size={20} />} label="Study Plan" onClick={() => setIsOpen(false)} />
@@ -64,9 +70,10 @@ const SideBar = ({ isOpen, setIsOpen }) => {
           </nav>
         </div>
 
+        {/* User Profile Section (Bottom) */}
         <div className="p-4 border-t border-gray-100 bg-gray-50/30">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 bg-gradient-to-br from-[#246690] to-[#14B8A6] rounded-xl flex items-center justify-center text-white font-bold shadow-sm overflow-hidden">
+            <div className="h-10 w-10 bg-gradient-to-br from-[#246690] to-[#14B8A6] rounded-xl flex items-center justify-center text-white font-bold shadow-sm overflow-hidden border border-white">
               {avatar ? (
                 <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -88,9 +95,10 @@ const SideBar = ({ isOpen, setIsOpen }) => {
         </div>
       </aside>
 
+      {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#101828]/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl text-center">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-6 bg-[#101828]/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl text-center animate-in zoom-in-95">
             <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <FiLogOut size={40} />
             </div>
@@ -119,6 +127,7 @@ const SideBar = ({ isOpen, setIsOpen }) => {
   );
 };
 
+// Sub-component for Navigation Items
 const NavItem = ({ to, icon, label, onClick, end }) => (
   <NavLink
     to={to}

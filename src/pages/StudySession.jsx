@@ -1,19 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useStudy } from '../context/StudyContext';
-import { IoCameraOutline, IoCloseCircle } from "react-icons/io5";
-import { FaRegLightbulb, FaPaperclip, FaEraser, FaChevronLeft, FaRegCheckCircle } from "react-icons/fa";
-import { FiMessageSquare, FiCoffee, FiAlertTriangle } from "react-icons/fi";
-import { LuLoaderCircle, LuSparkles, LuSend } from "react-icons/lu";
-import { CiPlay1, CiPause1 } from "react-icons/ci";
-import { FaArrowRotateLeft } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom';
+import { useStudy } from '../context/StudyContext';
+import { useAuth } from '../context/AuthContext';
 import Groq from "groq-sdk";
+import { 
+  FaChevronLeft, FaEraser, 
+  FaRegLightbulb, FaPaperclip, FaRegCheckCircle 
+} from "react-icons/fa";
+import { FaArrowRotateLeft } from "react-icons/fa6";
+import { CiPause1, CiPlay1 } from "react-icons/ci";
+import { FiMessageSquare, FiCoffee, FiAlertTriangle } from "react-icons/fi";
+import { IoCameraOutline, IoCloseCircle } from "react-icons/io5";
+import { LuLoaderCircle, LuSend, LuSparkles } from "react-icons/lu";
 
 const StudySession = () => {
   const { userData, updateStudyPlan } = useStudy();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   
+  // Dynamic session data from context
   const currentSubject = userData.currentSession?.subject || "General Studies";
   const currentTopic = userData.currentSession?.topic || "Learning Session";
 
@@ -126,23 +131,35 @@ const StudySession = () => {
     // Logic: 18s = 1% progress
     const earnedProgress = Math.max(1, Math.floor(seconds / 18));
 
-    // Format Duration for SubjectDetail (e.g. "1h 5m")
     const formatDuration = (totalSecs) => {
         const h = Math.floor(totalSecs / 3600);
         const m = Math.floor((totalSecs % 3600) / 60);
         return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
 
-    const updatedSubjects = [...userData.subjects];
-    const subjectIndex = userData.activeSubjectIndex;
+    // Deep copy of subjects
+    const updatedSubjects = [...(userData.subjects || [])];
     
-    if (updatedSubjects[subjectIndex]) {
-      const oldProgress = updatedSubjects[subjectIndex].progress || 0;
-      updatedSubjects[subjectIndex].progress = Math.min(100, oldProgress + earnedProgress);
+    /**
+     * CRITICAL FIX: Find subject by name.
+     * This ensures that "Quick Start" sessions (which might be new) 
+     * update the correct item in the array even if the index shifts.
+     */
+    const subjectIndex = updatedSubjects.findIndex(
+      s => s.name.toLowerCase() === currentSubject.toLowerCase()
+    );
+    
+    if (subjectIndex !== -1) {
+      const targetSub = updatedSubjects[subjectIndex];
+      const oldProgress = targetSub.progress || 0;
+      const totalSecondsDone = (targetSub.totalSecondsTracked || 0) + seconds;
       
-      const totalSecondsDone = (updatedSubjects[subjectIndex].totalSecondsTracked || 0) + seconds;
-      updatedSubjects[subjectIndex].totalSecondsTracked = totalSecondsDone;
-      updatedSubjects[subjectIndex].timeSpent = formatDuration(totalSecondsDone);
+      updatedSubjects[subjectIndex] = {
+        ...targetSub,
+        progress: Math.min(100, oldProgress + earnedProgress),
+        totalSecondsTracked: totalSecondsDone,
+        timeSpent: formatDuration(totalSecondsDone)
+      };
     }
 
     updateStudyPlan({
